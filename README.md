@@ -85,6 +85,18 @@ Possible vars are:
 * tls_warn = Warning limit in days before expiry date. Default: 30
 * tls_crit = Warning limit in days before expiry date. Default: 10
 
+#### Step 3.3: Add a service group (optional)
+
+If you want to add a service group for this check you can simply add the following block in `groups.conf`:
+
+```
+object ServiceGroup "tls_certificate_expiration" {
+    display_name = "TLS certificate expiration checks"
+
+    assign where service.check_command == "tls_certificate_expiration_check"
+}
+```
+
 That's it. Pretty simple and small.
 
 If you want to add it to multiple hosts work with `apply`
