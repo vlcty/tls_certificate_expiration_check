@@ -1,0 +1,125 @@
+#!/usr/bin/perl
+#
+# check_tls_certificate_expiration - Check for nagios/icinga/icinga2 to check TLS Certificates
+# Copyright (C) 2015  Josef 'veloc1ty' Stautner (hello@veloc1ty.de)
+#
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+#
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Date::Calc qw(Delta_Days Decode_Month Today);
+
+our $OPENSSL_PATH = '/usr/bin/openssl';
+our $HOSTNAME = '';
+our $PORT = 443;
+our $WARNING_DAYS = 30;
+our $CRITICAL_DAYS = 10;
+
+main();
+
+sub main {
+	check_for_openssl();
+	parse_options();
+	check_critical_less_than_warning();
+	decide_exit_code(calculate_days_left(get_expiry_date()));
+}
+
+sub exit_unknown {
+	my $errorMessage = shift;
+	print("$errorMessage\n");
+	exit 3;
+}
+
+sub decide_exit_code {
+	my $daysLeft = shift;
+
+	if ( $daysLeft > $WARNING_DAYS ) {
+		print("OK - $daysLeft days left \n");
+		exit 0;
+	}
+	elsif ( $daysLeft > $CRITICAL_DAYS && $daysLeft <= $WARNING_DAYS ) {
+		print("OK - Certificate is going to expire in $daysLeft days\n");
+		exit 1;
+	}
+	elsif ( $daysLeft <= $CRITICAL_DAYS ) {
+		print("OK - Certificate is going to expire in $daysLeft days\n");
+		exit 2;
+	}
+}
+
+sub get_expiry_date {
+	my @result = `echo | $OPENSSL_PATH s_client -connect $HOSTNAME:$PORT 2>/dev/null | $OPENSSL_PATH x509 -noout -dates`;
+	
+	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( scalar(@result) != 2 );
+
+	my $expireDate = $result[1];
+	$expireDate =~ s/not.*=//ig;
+	chomp($expireDate);
+
+	return $expireDate;
+}
+
+sub calculate_days_left {
+	my $expireDate = shift;
+
+	my ($month, $day, $time, $year, $tz) = split(/\s+/, $expireDate);
+
+	my ( $nowYear, $nowMonth, $nowDay) = Today();
+
+	return Delta_Days($nowYear, $nowMonth, $nowDay,
+		$year, Decode_Month($month), $day);
+}
+
+sub check_for_openssl {
+	exit_unknown("OpenSSL not found under $OPENSSL_PATH") if ( ! -e $OPENSSL_PATH );
+}
+
+sub parse_options {
+	GetOptions (
+		"hostname=s" => \$HOSTNAME,
+		"port=i" => \$PORT,
+		"warn=i" => \$WARNING_DAYS,
+		"crit=i" => \$CRITICAL_DAYS,
+		"help" => \&print_help
+		);
+
+	exit_unknown("--hostname argument is invalid") if ( length($HOSTNAME) == 0);
+	exit_unknown("--port argument is invalid") if ( $PORT <= 0 || $PORT > 65535 );
+}
+
+sub check_critical_less_than_warning {
+	exit_unknown("critical value ($CRITICAL_DAYS) is greater than warning value ($WARNING_DAYS)") if ( $CRITICAL_DAYS > $WARNING_DAYS );
+}
+
+sub print_help {
+	print << "END_MESSAGE";
+check_tls_certificate_expiration - Monitor days before a TLS certificate expires
+Copyright (c) 2015 Josef 'veloc1ty' Stautner (hello\@veloc1ty.de)
+
+Usage:
+	--hostname = Set the hostname (mandatory)
+	--port     = Set the port. Default: $PORT
+	--warn     = Warning limit in days before expiry date. Default: $WARNING_DAYS
+	--crit     = Critical limit in days before expiry date. Default: $CRITICAL_DAYS
+	--help     = Print this message
+
+Special thanks:
+	shellhacks.com - For the tips to extract the expire date of the server response (see get_expiry_date) 
+	http://www.shellhacks.com/en/HowTo-Check-SSL-Certificate-Expiration-Date-from-the-Linux-Shell
+	
+END_MESSAGE
+
+	exit 0;
+}
