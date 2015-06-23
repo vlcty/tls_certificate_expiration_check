@@ -3,7 +3,7 @@
 ## What is it
 
 This is a small plugin for Nagios / Icinga to monitor the days left before a TLS certificate expires.
-An expired certificate is not good and should never happen. Well, it happened to me and I got dozens of E-Mail about people complaining about that.
+An expired certificate is not good and should never happen. Well, it happened to me and I got many E-Mail from people complaining about that.
 
 ## What it does
 
