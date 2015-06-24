@@ -2,14 +2,14 @@
 
 ## What is it
 
-This is a small plugin for Nagios / Icinga to monitor the days left before a TLS certificate expires.
-An expired certificate is not good and should never happen. Well, it happened to me and I got many E-Mail from people complaining about that.
+This is a plugin for Nagios / Icinga to monitor the days left before a TLS certificate expires.
+An expired certificate isn't good and should never happen. Well, it happened to me and I got many E-Mails from people complaining about that.
 
 ## What it does
 
-The plugin uses OpenSSL's s_client to connect to a given hostname and port. Afterwards the date of the expiration is extracted and the delta time calculated.
+The plugin uses OpenSSL's s_client to connect to a given hostname and port. Afterwards the expiration date is extracted and the delta time in days calculated.
 
-You can give custom parameters for warn- and critical-values. Defaul warn-value is 30 days and default critical-value is 10 days.
+You can give custom parameters for warning- and critical-values. Defaul warning-value is 30 days and default critical-value is 10 days.
 
 ## How to install
 ### Step 1: Get the script
@@ -18,17 +18,19 @@ Fetch the script and place it in your PluginDir-Folder. Usually it's unter `/usr
 
 ### Step 2: Install dependencies
 
-I assume you have `perl` and `openssl` already installed. Only the perl module `Date::Calc` is required but maybe already installed.
+I assume you have `perl` and `openssl` already installed. The only additional dependency is the `Date::Calc` perl module. It was already installed on my Ubuntu 15.04 system but not ony my Debian 8 servers.
 
-On Debian based distributions you can install it via
+If you use `apt` you can simply install it via
 
 ```apt-get install libdate-calc-perl```
 
-Or you install it over CPAN.
+Or you install it over CPAN. Your choice!
 
 ### Step 3: Make it available for Icinga 2
 
 I don't have Nagios so I don't know how to configure it :-)
+
+I tried to developed the plugin according to the "Nagios Plugin Development Guidelines" so there shouldn't be any problem with implementing this check in Nagios. You just have to figure out how.
 
 To make it available to Icinga 2 you have to do the following steps.
 
@@ -59,7 +61,7 @@ object CheckCommand "tls_certificate_expiration_check" {
 
 #### Step 3.2: Add check to a host
 
-To add the check to a single host use the following in a host configuration file:
+To add the check to a host use this snippet in a host configuration file:
 
 ```
 object Host "mineralwasser" {
@@ -83,11 +85,13 @@ Possible vars are:
 * tls_hostname = The hostname of the server (mandatory)
 * tls_port = The port of the server. Default: 443
 * tls_warn = Warning limit in days before expiry date. Default: 30
-* tls_crit = Warning limit in days before expiry date. Default: 10
+* tls_crit = Critical limit in days before expiry date. Default: 10
+
+Of course you can change check_interval to the value you desire. Since the plugin calculates in whole days one check every day is enough.
 
 #### Step 3.3: Add a service group (optional)
 
-If you want to add a service group for this check you can simply add the following block in `groups.conf`:
+If you want to add a service group for this check you can simply add the following snippet in `groups.conf`:
 
 ```
 object ServiceGroup "tls_certificate_expiration" {
@@ -97,7 +101,6 @@ object ServiceGroup "tls_certificate_expiration" {
 }
 ```
 
-That's it. Pretty simple and small.
+If you want to add it to multiple hosts work with `apply`!
 
-If you want to add it to multiple hosts work with `apply`
-
+That's it. Pretty simple. Reload or restart icinga2 and check the result in your browser.
