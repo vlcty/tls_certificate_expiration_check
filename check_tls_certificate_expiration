@@ -50,11 +50,11 @@ sub decide_exit_code {
 		exit 0;
 	}
 	elsif ( $daysLeft > $CRITICAL_DAYS && $daysLeft <= $WARNING_DAYS ) {
-		print("OK - Certificate is going to expire in $daysLeft days\n");
+		print("WARNING - Certificate is going to expire in $daysLeft days\n");
 		exit 1;
 	}
 	elsif ( $daysLeft <= $CRITICAL_DAYS ) {
-		print("OK - Certificate is going to expire in $daysLeft days\n");
+		print("CRITICAL - Certificate is going to expire in $daysLeft days\n");
 		exit 2;
 	}
 }
