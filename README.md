@@ -42,21 +42,27 @@ I placed the following piece of code in `commands.cfg`:
 
 ```
 object CheckCommand "tls_certificate_expiration_check" {
-        import "plugin-check-command"
+    import "plugin-check-command"
 
-        command = [ PluginDir + "/check_tls_certificate_expiration" ]
-
-        arguments = {
-                "--hostname" = {
-                        required = true
-                        value = "$tls_hostname$"
-                }
-                "--port" = "$tls_port$"
-                "--warn" = "$tls_warn$"
-                "--crit" = "$tls_crit$"
+    command = [ PluginDir + "/check_tls_certificate_expiration" ]
+    
+    arguments = {
+        "--hostname" = {
+            required = true
+            value = "$tls_hostname$"
         }
+        "--servername" = {
+            required = true
+            value = "$tls_servername$"
+        }
+        "--port" = "$tls_port$"
+        "--warn" = "$tls_warn$"
+        "--crit" = "$tls_crit$"
+    }
 
+    vars.tls_hostname = "$address$"
 }
+
 ```
 
 #### Step 3.2: Add check to a host
@@ -75,14 +81,15 @@ object Service "tls_blog.veloc1ty.de" {
 
         check_command = "tls_certificate_expiration_check"
 
-        vars.tls_hostname = "blog.veloc1ty.de"
+        vars.tls_servername = "blog.veloc1ty.de"
 }
 
 ```
 
 Possible vars are:
 
-* tls_hostname = The hostname of the server (mandatory)
+* tls_hostname = The hostname of the server (mandatory, default: hosts address)
+* tls_servername = The FQDN for the server name indication (SNI, mandatory)
 * tls_port = The port of the server. Default: 443
 * tls_warn = Warning limit in days before expiry date. Default: 30
 * tls_crit = Critical limit in days before expiry date. Default: 10
@@ -104,3 +111,7 @@ object ServiceGroup "tls_certificate_expiration" {
 If you want to add it to multiple hosts work with `apply`!
 
 That's it. Pretty simple. Reload or restart icinga2 and check the result in your browser.
+
+# Special thanks
+
+Special thanks to Jan from biocrafting.net for notifying me about the SNI issue!
