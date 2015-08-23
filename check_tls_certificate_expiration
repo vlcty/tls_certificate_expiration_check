@@ -62,12 +62,20 @@ sub decide_exit_code {
 
 sub get_expiry_date {
 	my @result = `echo | $OPENSSL_PATH s_client -connect $HOSTNAME:$PORT -servername $SERVERNAME 2>/dev/null | $OPENSSL_PATH x509 -noout -dates`;
-	
-	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( scalar(@result) != 2 );
 
-	my $expireDate = $result[1];
+	my $expireDate = '';
+
+	foreach my $currentResult ( @result ) {
+		if ( $currentResult =~ m/^notAfter/ ) {
+			$expireDate = $currentResult;
+			last;
+		}
+	}
+
 	$expireDate =~ s/not.*=//ig;
 	chomp($expireDate);
+
+	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );
 
 	return $expireDate;
 }
@@ -120,9 +128,9 @@ Usage:
 	--help       = Print this message
 
 Special thanks:
-	shellhacks.com - For the tips to extract the expire date of the server response (see get_expiry_date) 
+	shellhacks.com - For the tips to extract the expire date of the server response (see get_expiry_date)
 	http://www.shellhacks.com/en/HowTo-Check-SSL-Certificate-Expiration-Date-from-the-Linux-Shell
-	
+
 END_MESSAGE
 
 	exit 0;
