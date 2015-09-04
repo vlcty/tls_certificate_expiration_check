@@ -81,6 +81,24 @@ sub fetch_certificate_from_network {
 
 sub fetch_certificate_from_file {
 	my ( $filepath ) = @;
+
+	exit_unknown("Certificate under $filepath was not found. Plese check the path") if ( ! -e $filePath );
+
+	my @result = `$OPENSSL_PATH x509 -noout -dates -in $filepath`;
+
+	my $expireDate = '';
+
+	foreach my $currentResult ( @result ) {
+		if ( $currentResult =~ m/^notAfter/ ) {
+			$expireDate = $currentResult;
+			last;
+		}
+	}
+
+	$expireDate =~ s/not.*=//ig;
+	chomp($expireDate);
+
+	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );	
 }
 
 sub calculate_days_left {
