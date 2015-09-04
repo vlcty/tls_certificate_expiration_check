@@ -82,6 +82,10 @@ sub fetch_certificate_from_network {
 	my ( $address, $port, $sniHostname ) = @;
 }
 
+sub fetch_certificate_from_file {
+	my ( $filepath ) = @;
+}
+
 sub calculate_days_left {
 	my $expireDate = shift;
 
