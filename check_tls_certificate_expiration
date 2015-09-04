@@ -22,9 +22,6 @@ use Getopt::Long;
 use Date::Calc qw(Delta_Days Decode_Month Today);
 
 our $OPENSSL_PATH = '/usr/bin/openssl';
-our $HOSTNAME = '';
-our $SERVERNAME = '';
-our $PORT = 443;
 our $WARNING_DAYS = 30;
 our $CRITICAL_DAYS = 10;
 
@@ -78,6 +75,11 @@ sub get_expiry_date {
 	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );
 
 	return $expireDate;
+}
+
+
+sub fetch_certificate_from_network {
+	my ( $address, $port, $sniHostname ) = @;
 }
 
 sub calculate_days_left {
