@@ -40,7 +40,20 @@ sub main {
 	check_for_openssl();
 	parse_options();
 	check_critical_less_than_warning();
-	decide_exit_code(calculate_days_left());
+
+	my $expireDate = '';
+
+	if ( $mode eq 'network' ) {
+		$expireDate = fetch_certificate_from_network($ADDRESS, $PORT, $SNI_HOSTNAME);
+	}
+	elsif ( $mode eq 'file' ) {
+		$expireDate = fetch_certificate_from_file($FILEPATH);
+	}
+	else {
+		exit_unknown('Given mode is unknown');
+	}
+
+	decide_exit_code(calculate_days_left($expireDate));
 }
 
 sub exit_unknown {
@@ -124,17 +137,31 @@ sub check_critical_less_than_warning {
 
 sub print_help {
 	print << "END_MESSAGE";
-check_tls_certificate_expiration - Monitor days before a TLS certificate expires
+check_tls_certificate_expiration - Monitor expiration of a TLS certificate
 Copyright (c) 2015 Josef 'veloc1ty' Stautner (hello\@veloc1ty.de)
 
 Usage:
+	--mode	 = Which mode to run. Possible values currently are 'file' and 'network'
+			   network mode: Connect to a network service and analyze the presented certificate
+			   file mode: Read a certificate from the file system
 	--warn       = Warning limit in days before expiry date. Default: $WARNING_DAYS
 	--crit       = Critical limit in days before expiry date. Default: $CRITICAL_DAYS
 	--help       = Print this message
 
+Extra arguments:
+	For 'network' mode:
+		--address		= The address of the server (IP or Hostname)
+		--port		= The port (Default is $PORT)
+		--sniHostname 	= The hostname to send for SNI process
+
+	For 'file' mode:
+		--file		= (Full-)Path to the certificate
+
 Special thanks:
-	shellhacks.com - For the tips to extract the expire date of the server response (see get_expiry_date)
+	1) shellhacks.com - For the tips to extract the expire date of the server response (see get_expiry_date)
 	http://www.shellhacks.com/en/HowTo-Check-SSL-Certificate-Expiration-Date-from-the-Linux-Shell
+
+	2) Jan from biocrafting.net for notifying me about the SNI issue!
 
 END_MESSAGE
 
