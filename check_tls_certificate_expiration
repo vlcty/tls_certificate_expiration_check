@@ -31,7 +31,7 @@ sub main {
 	check_for_openssl();
 	parse_options();
 	check_critical_less_than_warning();
-	decide_exit_code(calculate_days_left(get_expiry_date()));
+	decide_exit_code(calculate_days_left(fetch_certificate_from_network('veloc1ty.de', 443, 'blog.veloc1ty.de')));
 }
 
 sub exit_unknown {
@@ -58,15 +58,15 @@ sub decide_exit_code {
 }
 
 sub fetch_certificate_from_network {
-	my ( $address, $port, $sniHostname ) = @;
+	my ( $address, $port, $sniHostname ) = @_;
 
 	my @result = `echo | $OPENSSL_PATH s_client -connect $address:$port -servername $sniHostname 2>/dev/null | $OPENSSL_PATH x509 -noout -dates`;
-	
+
 	return extract_expiry_dayte_from_openssl_putput(@result);
 }
 
 sub fetch_certificate_from_file {
-	my ( $filepath ) = @;
+	my ( $filepath ) = @_;
 
 	exit_unknown("Certificate under $filepath was not found. Plese check the path") if ( ! -e $filePath );
 
