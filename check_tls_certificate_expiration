@@ -31,7 +31,7 @@ sub main {
 	check_for_openssl();
 	parse_options();
 	check_critical_less_than_warning();
-	decide_exit_code(calculate_days_left(fetch_certificate_from_network('veloc1ty.de', 443, 'blog.veloc1ty.de')));
+	decide_exit_code(calculate_days_left());
 }
 
 sub exit_unknown {
@@ -60,37 +60,28 @@ sub decide_exit_code {
 sub fetch_certificate_from_network {
 	my ( $address, $port, $sniHostname ) = @_;
 
-	my @result = `echo | $OPENSSL_PATH s_client -connect $address:$port -servername $sniHostname 2>/dev/null | $OPENSSL_PATH x509 -noout -dates`;
+	my $result = `echo | $OPENSSL_PATH s_client -connect $address:$port -servername $sniHostname 2>/dev/null | $OPENSSL_PATH x509 -noout -dates | grep notAfter`;
 
-	return extract_expiry_dayte_from_openssl_putput(@result);
+	return extract_expiry_dayte_from_openssl_putput($result);
 }
 
 sub fetch_certificate_from_file {
 	my ( $filepath ) = @_;
 
-	exit_unknown("Certificate under $filepath was not found. Plese check the path") if ( ! -e $filePath );
+	exit_unknown("Certificate under $filepath was not found. Plese check the path") if ( ! -e $filepath );
 
-	my @result = `$OPENSSL_PATH x509 -noout -dates -in $filepath`;
+	my $result = `$OPENSSL_PATH x509 -noout -dates -in $filepath | grep notAfter`;
 
-	return extract_expiry_dayte_from_openssl_putput(@result);
+	return extract_expiry_dayte_from_openssl_putput($result);
 }
 
 sub extract_expiry_dayte_from_openssl_putput {
-	my @output = shift;
-
-	my $expireDate = '';
-
-	foreach my $currentResult ( @output ) {
-		if ( $currentResult =~ m/^notAfter/ ) {
-			$expireDate = $currentResult;
-			last;
-		}
-	}
+	my $expireDate = shift;
 
 	$expireDate =~ s/not.*=//ig;
 	chomp($expireDate);
 
-	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );
+	exit_unknown("Didn't get an expire date from OpenSSL" ) if ( length($expireDate) == 0 );
 
 	return $expireDate;
 }
@@ -112,17 +103,10 @@ sub check_for_openssl {
 
 sub parse_options {
 	GetOptions (
-		"hostname=s" => \$HOSTNAME,
-		"port=i" => \$PORT,
-		"servername=s" => \$SERVERNAME,
 		"warn=i" => \$WARNING_DAYS,
 		"crit=i" => \$CRITICAL_DAYS,
 		"help" => \&print_help
 		);
-
-	exit_unknown("--hostname argument is invalid") if ( length($HOSTNAME) == 0);
-	exit_unknown("--servername argument is invalid") if ( length($SERVERNAME) == 0);
-	exit_unknown("--port argument is invalid") if ( $PORT <= 0 || $PORT > 65535 );
 }
 
 sub check_critical_less_than_warning {
@@ -137,7 +121,7 @@ Copyright (c) 2015 Josef 'veloc1ty' Stautner (hello\@veloc1ty.de)
 Usage:
 	--hostname   = IP-Address or hostname (mandatory, default: host address)
 	--servername = The FQDN for the server name indication (SNI, mandatory)
-	--port       = Set the port. Default: $PORT
+	--port       = Set the port. Default: \$PORT
 	--warn       = Warning limit in days before expiry date. Default: $WARNING_DAYS
 	--crit       = Critical limit in days before expiry date. Default: $CRITICAL_DAYS
 	--help       = Print this message
