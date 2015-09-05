@@ -61,10 +61,26 @@ sub fetch_certificate_from_network {
 	my ( $address, $port, $sniHostname ) = @;
 
 	my @result = `echo | $OPENSSL_PATH s_client -connect $address:$port -servername $sniHostname 2>/dev/null | $OPENSSL_PATH x509 -noout -dates`;
+	
+	return extract_expiry_dayte_from_openssl_putput(@result);
+}
+
+sub fetch_certificate_from_file {
+	my ( $filepath ) = @;
+
+	exit_unknown("Certificate under $filepath was not found. Plese check the path") if ( ! -e $filePath );
+
+	my @result = `$OPENSSL_PATH x509 -noout -dates -in $filepath`;
+
+	return extract_expiry_dayte_from_openssl_putput(@result);
+}
+
+sub extract_expiry_dayte_from_openssl_putput {
+	my @output = shift;
 
 	my $expireDate = '';
 
-	foreach my $currentResult ( @result ) {
+	foreach my $currentResult ( @output ) {
 		if ( $currentResult =~ m/^notAfter/ ) {
 			$expireDate = $currentResult;
 			last;
@@ -77,28 +93,6 @@ sub fetch_certificate_from_network {
 	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );
 
 	return $expireDate;
-}
-
-sub fetch_certificate_from_file {
-	my ( $filepath ) = @;
-
-	exit_unknown("Certificate under $filepath was not found. Plese check the path") if ( ! -e $filePath );
-
-	my @result = `$OPENSSL_PATH x509 -noout -dates -in $filepath`;
-
-	my $expireDate = '';
-
-	foreach my $currentResult ( @result ) {
-		if ( $currentResult =~ m/^notAfter/ ) {
-			$expireDate = $currentResult;
-			last;
-		}
-	}
-
-	$expireDate =~ s/not.*=//ig;
-	chomp($expireDate);
-
-	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );	
 }
 
 sub calculate_days_left {
