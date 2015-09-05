@@ -24,11 +24,11 @@ use Date::Calc qw(Delta_Days Decode_Month Today);
 our $OPENSSL_PATH = '/usr/bin/openssl';
 our $WARNING_DAYS = 30;
 our $CRITICAL_DAYS = 10;
-our $MODE = 'network';
+our $MODE = '';
 
 # Config option for network mode
 our $ADDRESS = '';
-our $PORT = '';
+our $PORT = 443;
 our $SNI_HOSTNAME = '';
 
 # Config option for file mode
@@ -43,14 +43,11 @@ sub main {
 
 	my $expireDate = '';
 
-	if ( $mode eq 'network' ) {
+	if ( $MODE eq 'network' ) {
 		$expireDate = fetch_certificate_from_network($ADDRESS, $PORT, $SNI_HOSTNAME);
 	}
-	elsif ( $mode eq 'file' ) {
-		$expireDate = fetch_certificate_from_file($FILEPATH);
-	}
 	else {
-		exit_unknown('Given mode is unknown');
+		$expireDate = fetch_certificate_from_file($FILEPATH);
 	}
 
 	decide_exit_code(calculate_days_left($expireDate));
@@ -125,10 +122,35 @@ sub check_for_openssl {
 
 sub parse_options {
 	GetOptions (
+		"mode=s" => \$MODE,
+		"address=s" => \$ADDRESS,
+		"port=i" => \$PORT,
+		"sniHostname=s" => \$SNI_HOSTNAME,
+		"filepath=s" => \$FILEPATH,
 		"warn=i" => \$WARNING_DAYS,
 		"crit=i" => \$CRITICAL_DAYS,
 		"help" => \&print_help
 		);
+
+	if ( $MODE eq 'file' ) {
+		validate_file_arguments();
+	}
+	elsif ( $MODE eq 'network' ) {
+		validate_network_arguments();
+	}
+	else {
+		exit_unknown('Given mode is unknown');
+	}
+}
+
+sub validate_network_arguments {
+	exit_unknown('Argument --address is not set') if ( length($ADDRESS) == 0 );
+	exit_unknown('Argument --port is not set') if ( $PORT < 1 || $PORT > 65535 );
+	exit_unknown('Argument --sniHostname is not set') if ( length($SNI_HOSTNAME) == 0 );
+}
+
+sub validate_file_arguments {
+	exit_unknown('Argument --filepath is not set') if ( length($FILEPATH) == 0 );
 }
 
 sub check_critical_less_than_warning {
@@ -155,7 +177,7 @@ Extra arguments:
 		--sniHostname 	= The hostname to send for SNI process
 
 	For 'file' mode:
-		--file		= (Full-)Path to the certificate
+		--filepath		= (Full-)Path to the certificate
 
 Special thanks:
 	1) shellhacks.com - For the tips to extract the expire date of the server response (see get_expiry_date)
