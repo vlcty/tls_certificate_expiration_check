@@ -49,13 +49,28 @@ sub parseOptions {
 		exitUnknown("Argument --address is not set");
 	}
 
-	if ( $ARG_PORT !~ /\d+/ ) {
+	if ( ! isInteger($ARG_PORT) ) {
 		exitUnknown("Argument --port is not numeric");
 	}
 
 	if ( $ARG_PORT <= 0 || $ARG_PORT >= 65535 ) {
 		exitUnknown("Argument --port is out of bounds! Valid: 1-65535");
 	}
+
+	if ( ! isInteger($ARG_WARNING_DAYS) ) {
+		exitUnknown("Argument --warn is not numeric");
+	}
+
+	if ( ! isInteger($ARG_CRITICAL_DAYS) ) {
+		exitUnknown("Argument --crit is not numeric");
+	}
+}
+
+sub isInteger {
+	my $possibleInteger = shift;
+
+	return 1 if ( $possibleInteger !~ /\d+/ );
+	return 0;
 }
 
 sub checkCriticalLessThanWarning {
