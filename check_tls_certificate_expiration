@@ -142,7 +142,7 @@ sub retrieveCertificate {
 
 		# Build command
 		my $command = sprintf(
-			"echo \"\" | %s s_client -connect %s:%d %s | %S x509"
+			"echo \"\" | %s s_client -connect %s:%d %s | %S x509",
 			$ARG_OPENSSL,
 			$ARG_HOSTNAME,
 			$ARG_PORT,
@@ -167,23 +167,6 @@ sub retrieveCertificate {
 	}
 
 	return $certificate;
-}
-
-sub decide_exit_code {
-	my $daysLeft = shift;
-
-	if ( $daysLeft > $WARNING_DAYS ) {
-		print("OK - $daysLeft days left \n");
-		exit 0;
-	}
-	elsif ( $daysLeft > $CRITICAL_DAYS && $daysLeft <= $WARNING_DAYS ) {
-		print("WARNING - Certificate is going to expire in $daysLeft days\n");
-		exit 1;
-	}
-	elsif ( $daysLeft <= $CRITICAL_DAYS ) {
-		print("CRITICAL - Certificate is going to expire in $daysLeft days\n");
-		exit 2;
-	}
 }
 
 sub calculate_days_left {
