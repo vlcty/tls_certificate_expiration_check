@@ -37,11 +37,11 @@ our $ARG_FILE = '';
 main();
 
 sub main {
-	parseOptions();
-	
+	parseArguments();
+
 }
 
-sub parseOptions {
+sub parseArguments {
 	GetOptions (
 		'address=s' => \$ARG_ADDRESS,
 		'port=s' => \$ARG_HOSTNAME,
