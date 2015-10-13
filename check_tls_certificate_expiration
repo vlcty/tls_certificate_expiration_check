@@ -38,7 +38,6 @@ main();
 
 sub main {
 	parseArguments();
-
 }
 
 sub parseArguments {
@@ -46,6 +45,7 @@ sub parseArguments {
 		'address=s' => \$ARG_ADDRESS,
 		'port=s' => \$ARG_HOSTNAME,
 		'hostname=s' => \$ARG_HOSTNAME,
+		'file=s' => \$ARG_FILE,
 		'warn=i' => \$ARG_WARNING_DAYS,
 		'crit=i' => \$ARG_CRITICAL_DAYS
 	);
