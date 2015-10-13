@@ -30,6 +30,7 @@ our $ARG_CRITICAL_DAYS = 10;
 our $ARG_ADDRESS = '';
 our $ARG_HOSTNAME = ''; # Only used for HTTP SNI
 our $ARG_PORT = 443;
+our $ARG_OPENSSL = '/usr/bin/openssl';
 
 # Argument for file check
 our $ARG_FILE = '';
@@ -47,7 +48,8 @@ sub parseArguments {
 		'hostname=s' => \$ARG_HOSTNAME,
 		'file=s' => \$ARG_FILE,
 		'warn=i' => \$ARG_WARNING_DAYS,
-		'crit=i' => \$ARG_CRITICAL_DAYS
+		'crit=i' => \$ARG_CRITICAL_DAYS,
+		'openssl=s' => \$ARG_OPENSSL
 	);
 
 	validateArguments();
@@ -85,6 +87,10 @@ sub validateArguments {
 }
 
 sub validateNetworkArguments {
+	if ( ! -e $ARG_OPENSSL ) {
+		exitUnknown(sprintf("OpenSSL not found under %s", $ARG_OPENSSL));
+	}
+
 	if ( length($ARG_ADDRESS) == 0) {
 		exitUnknown("Argument --address is not set");
 	}
@@ -126,6 +132,25 @@ sub retrieveCertificate {
 	if ( length($ARG_FILE) == 0 ) {
 		# Network mode
 		# Fetch certificate and return it as a string
+
+		# Check if we have to set SNI
+		my $sniPart = '';
+
+		if ( length($ARG_HOSTNAME) != 0 ) {
+			$sniPart = sprintf("-servername %s", $ARG_HOSTNAME);
+		}
+
+		# Build command
+		my $command = sprintf(
+			"echo \"\" | %s s_client -connect %s:%d %s | %S x509"
+			$ARG_OPENSSL,
+			$ARG_HOSTNAME,
+			$ARG_PORT,
+			$sniPart,
+			$ARG_OPENSSL
+			);
+
+		my $output = `$command`;
 
 	}
 	else {
