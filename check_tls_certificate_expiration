@@ -22,11 +22,17 @@ use Getopt::Long;
 use Date::Calc qw(Delta_Days Decode_Month Today);
 use Crypt::OpenSSL::X509;
 
+# Basic Arguments
+our $ARG_WARNING_DAYS = 30;
+our $ARG_CRITICAL_DAYS = 10;
+
+# Arguments for network check
 our $ARG_ADDRESS = '';
 our $ARG_HOSTNAME = ''; # Only used for HTTP SNI
 our $ARG_PORT = 443;
-our $ARG_WARNING_DAYS = 30;
-our $ARG_CRITICAL_DAYS = 10;
+
+# Argument for file check
+our $ARG_FILE = '';
 
 main();
 
