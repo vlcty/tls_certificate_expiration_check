@@ -120,6 +120,30 @@ sub exitUnknown {
 	exit 3;
 }
 
+sub retrieveCertificate {
+	my $certificate = '';
+
+	if ( length($ARG_FILE) == 0 ) {
+		# Network mode
+		# Fetch certificate and return it as a string
+
+	}
+	else {
+		# File mode
+		# Fetch certificate from file and return it as string
+		open(CERT, $ARG_FILE);
+		my $line = '';
+
+		while ( $line = <CERT> ) {
+			$certificate .= $line;
+		}
+
+		close(CERT);
+	}
+
+	return $certificate;
+}
+
 sub decide_exit_code {
 	my $daysLeft = shift;
 
