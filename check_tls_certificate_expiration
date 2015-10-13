@@ -36,6 +36,24 @@ sub main {
 	decide_exit_code(calculate_days_left(get_expiry_date()));
 }
 
+sub parse_options {
+	GetOptions (
+		'address=s' => \$ARG_ADDRESS,
+		'port=s' => \$ARG_HOSTNAME,
+		'hostname=s' => \$ARG_HOSTNAME,
+		'warn=i' => \$ARG_WARNING_DAYS,
+		'crit=i' => \$ARG_CRITICAL_DAYS
+	);
+
+	if ( length($ARG_ADDRESS) == 0) {
+		exit_unknown("Argument --address is not set");
+	}
+
+	if ( $ARG_PORT <= 0 || $ARG_PORT >= 65535 ) {
+		exit_unknown("--port argument is invalid");
+	}
+}
+
 sub exit_unknown {
 	my $errorMessage = shift;
 	print("$errorMessage\n");
@@ -90,20 +108,7 @@ sub calculate_days_left {
 		$year, Decode_Month($month), $day);
 }
 
-sub parse_options {
-	GetOptions (
-		"hostname=s" => \$HOSTNAME,
-		"port=i" => \$PORT,
-		"servername=s" => \$SERVERNAME,
-		"warn=i" => \$WARNING_DAYS,
-		"crit=i" => \$CRITICAL_DAYS,
-		"help" => \&print_help
-		);
 
-	exit_unknown("--hostname argument is invalid") if ( length($HOSTNAME) == 0);
-	exit_unknown("--servername argument is invalid") if ( length($SERVERNAME) == 0);
-	exit_unknown("--port argument is invalid") if ( $PORT <= 0 || $PORT > 65535 );
-}
 
 sub check_critical_less_than_warning {
 	exit_unknown("critical value ($CRITICAL_DAYS) is greater than warning value ($WARNING_DAYS)") if ( $CRITICAL_DAYS > $WARNING_DAYS );
