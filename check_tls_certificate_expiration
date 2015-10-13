@@ -20,6 +20,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Date::Calc qw(Delta_Days Decode_Month Today);
+use Crypt::OpenSSL::X509;
 
 our $OPENSSL_PATH = '/usr/bin/openssl';
 our $HOSTNAME = '';
