@@ -50,6 +50,11 @@ sub parseOptions {
 		'crit=i' => \$ARG_CRITICAL_DAYS
 	);
 
+	validateArguments();
+}
+
+sub validateArguments {
+	# Common Arguments
 	if ( ! isInteger($ARG_WARNING_DAYS) ) {
 		exitUnknown("Argument --warn is not numeric");
 	}
@@ -58,10 +63,8 @@ sub parseOptions {
 		exitUnknown("Argument --crit is not numeric");
 	}
 
-	validateArguments();
-}
 
-sub validateArguments {
+
 	# Decide which mode
 	if ( length ($ARG_FILE) == 0 ) {
 		# Network mode
