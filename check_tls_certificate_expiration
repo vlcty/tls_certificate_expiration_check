@@ -70,7 +70,7 @@ sub validateArguments {
 			'Critical value (%d) is greater than warning value (%d)',
 			$ARG_CRITICAL_DAYS,
 			$ARG_WARNING_DAYS
-			);
+			));
 	}
 
 	# Decide which mode
@@ -116,7 +116,7 @@ sub validateFileArguments {
 sub isInteger {
 	my $possibleInteger = shift;
 
-	return 1 if ( $possibleInteger !~ /\d+/ );
+	return 1 if ( $possibleInteger =~ /\d+/ );
 	return 0;
 }
 
