@@ -31,12 +31,12 @@ our $ARG_CRITICAL_DAYS = 10;
 main();
 
 sub main {
-	parse_options();
+	parseOptions();
 	check_critical_less_than_warning();
 	decide_exit_code(calculate_days_left(get_expiry_date()));
 }
 
-sub parse_options {
+sub parseOptions {
 	GetOptions (
 		'address=s' => \$ARG_ADDRESS,
 		'port=s' => \$ARG_HOSTNAME,
