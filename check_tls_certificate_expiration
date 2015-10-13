@@ -54,7 +54,7 @@ sub parseOptions {
 	}
 
 	if ( $ARG_PORT <= 0 || $ARG_PORT >= 65535 ) {
-		exitUnknown("--port argument is invalid");
+		exitUnknown("Argument --port is out of bounds! Valid: 1-65535");
 	}
 }
 
