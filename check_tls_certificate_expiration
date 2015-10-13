@@ -58,6 +58,16 @@ sub parseOptions {
 	}
 }
 
+sub checkCriticalLessThanWarning {
+	if ( $ARG_CRITICAL_DAYS > $ARG_WARNING_DAYS ) {
+		exitUnknown(sprintf(
+			'Critical value (%d) is greater than warning value (%d)',
+			$ARG_CRITICAL_DAYS,
+			$ARG_WARNING_DAYS
+			);
+	}
+}
+
 sub exitUnknown {
 	my $errorMessage = shift;
 	print("$errorMessage\n");
@@ -110,8 +120,4 @@ sub calculate_days_left {
 
 	return Delta_Days($nowYear, $nowMonth, $nowDay,
 		$year, Decode_Month($month), $day);
-}
-
-sub checkCriticalLessThanWarning {
-	exitUnknown("critical value ($CRITICAL_DAYS) is greater than warning value ($WARNING_DAYS)") if ( $CRITICAL_DAYS > $WARNING_DAYS );
 }
