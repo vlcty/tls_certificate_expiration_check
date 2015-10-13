@@ -46,15 +46,15 @@ sub parseOptions {
 	);
 
 	if ( length($ARG_ADDRESS) == 0) {
-		exit_unknown("Argument --address is not set");
+		exitUnknown("Argument --address is not set");
 	}
 
 	if ( $ARG_PORT <= 0 || $ARG_PORT >= 65535 ) {
-		exit_unknown("--port argument is invalid");
+		exitUnknown("--port argument is invalid");
 	}
 }
 
-sub exit_unknown {
+sub exitUnknown {
 	my $errorMessage = shift;
 	print("$errorMessage\n");
 	exit 3;
@@ -92,7 +92,7 @@ sub get_expiry_date {
 	$expireDate =~ s/not.*=//ig;
 	chomp($expireDate);
 
-	exit_unknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );
+	exitUnknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );
 
 	return $expireDate;
 }
@@ -111,7 +111,7 @@ sub calculate_days_left {
 
 
 sub check_critical_less_than_warning {
-	exit_unknown("critical value ($CRITICAL_DAYS) is greater than warning value ($WARNING_DAYS)") if ( $CRITICAL_DAYS > $WARNING_DAYS );
+	exitUnknown("critical value ($CRITICAL_DAYS) is greater than warning value ($WARNING_DAYS)") if ( $CRITICAL_DAYS > $WARNING_DAYS );
 }
 
 sub print_help {
