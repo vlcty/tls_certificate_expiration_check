@@ -113,25 +113,3 @@ sub calculate_days_left {
 sub check_critical_less_than_warning {
 	exitUnknown("critical value ($CRITICAL_DAYS) is greater than warning value ($WARNING_DAYS)") if ( $CRITICAL_DAYS > $WARNING_DAYS );
 }
-
-sub print_help {
-	print << "END_MESSAGE";
-check_tls_certificate_expiration - Monitor days before a TLS certificate expires
-Copyright (c) 2015 Josef 'veloc1ty' Stautner (hello\@veloc1ty.de)
-
-Usage:
-	--hostname   = IP-Address or hostname (mandatory, default: host address)
-	--servername = The FQDN for the server name indication (SNI, mandatory)
-	--port       = Set the port. Default: $PORT
-	--warn       = Warning limit in days before expiry date. Default: $WARNING_DAYS
-	--crit       = Critical limit in days before expiry date. Default: $CRITICAL_DAYS
-	--help       = Print this message
-
-Special thanks:
-	shellhacks.com - For the tips to extract the expire date of the server response (see get_expiry_date)
-	http://www.shellhacks.com/en/HowTo-Check-SSL-Certificate-Expiration-Date-from-the-Linux-Shell
-
-END_MESSAGE
-
-	exit 0;
-}
