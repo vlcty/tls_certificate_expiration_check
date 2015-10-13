@@ -31,7 +31,6 @@ our $ARG_CRITICAL_DAYS = 10;
 main();
 
 sub main {
-	check_for_openssl();
 	parse_options();
 	check_critical_less_than_warning();
 	decide_exit_code(calculate_days_left(get_expiry_date()));
@@ -89,10 +88,6 @@ sub calculate_days_left {
 
 	return Delta_Days($nowYear, $nowMonth, $nowDay,
 		$year, Decode_Month($month), $day);
-}
-
-sub check_for_openssl {
-	exit_unknown("OpenSSL not found under $OPENSSL_PATH") if ( ! -e $OPENSSL_PATH );
 }
 
 sub parse_options {
