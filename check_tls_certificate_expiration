@@ -49,6 +49,10 @@ sub parseOptions {
 		exitUnknown("Argument --address is not set");
 	}
 
+	if ( $ARG_PORT !~ /\d+/ ) {
+		exitUnknown("Argument --port is not numeric");
+	}
+
 	if ( $ARG_PORT <= 0 || $ARG_PORT >= 65535 ) {
 		exitUnknown("--port argument is invalid");
 	}
