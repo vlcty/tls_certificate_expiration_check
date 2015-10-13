@@ -33,7 +33,6 @@ main();
 sub main {
 	parseOptions();
 	checkCriticalLessThanWarning();
-	decide_exit_code(calculate_days_left(get_expiry_date()));
 }
 
 sub parseOptions {
@@ -104,26 +103,6 @@ sub decide_exit_code {
 		print("CRITICAL - Certificate is going to expire in $daysLeft days\n");
 		exit 2;
 	}
-}
-
-sub get_expiry_date {
-	my @result = `echo | $OPENSSL_PATH s_client -connect $HOSTNAME:$PORT -servername $SERVERNAME 2>/dev/null | $OPENSSL_PATH x509 -noout -dates`;
-
-	my $expireDate = '';
-
-	foreach my $currentResult ( @result ) {
-		if ( $currentResult =~ m/^notAfter/ ) {
-			$expireDate = $currentResult;
-			last;
-		}
-	}
-
-	$expireDate =~ s/not.*=//ig;
-	chomp($expireDate);
-
-	exitUnknown("Didn't get two dates from OpenSSL's s_client" ) if ( length($expireDate) == 0 );
-
-	return $expireDate;
 }
 
 sub calculate_days_left {
