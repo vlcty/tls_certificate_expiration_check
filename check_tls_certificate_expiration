@@ -38,7 +38,7 @@ main();
 
 sub main {
 	parseOptions();
-	checkCriticalLessThanWarning();
+	
 }
 
 sub parseOptions {
@@ -63,7 +63,13 @@ sub validateArguments {
 		exitUnknown("Argument --crit is not numeric");
 	}
 
-
+	if ( $ARG_CRITICAL_DAYS > $ARG_WARNING_DAYS ) {
+		exitUnknown(sprintf(
+			'Critical value (%d) is greater than warning value (%d)',
+			$ARG_CRITICAL_DAYS,
+			$ARG_WARNING_DAYS
+			);
+	}
 
 	# Decide which mode
 	if ( length ($ARG_FILE) == 0 ) {
@@ -106,16 +112,6 @@ sub isInteger {
 
 	return 1 if ( $possibleInteger !~ /\d+/ );
 	return 0;
-}
-
-sub checkCriticalLessThanWarning {
-	if ( $ARG_CRITICAL_DAYS > $ARG_WARNING_DAYS ) {
-		exitUnknown(sprintf(
-			'Critical value (%d) is greater than warning value (%d)',
-			$ARG_CRITICAL_DAYS,
-			$ARG_WARNING_DAYS
-			);
-	}
 }
 
 sub exitUnknown {
