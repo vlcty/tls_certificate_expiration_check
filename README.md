@@ -106,6 +106,24 @@ If you want to add it to multiple hosts work with `apply`!
 
 That's it. Pretty simple. Reload or restart icinga2 and check the result in your browser.
 
+# Possible arguments
+
+The CheckCommand and the plugin accept various arguments:
+
+CheckCommand Variable | Plugin Argument | Description
+tls_address | --address | The address of the server
+tls_port | --port | The port to connect to. Default: 443
+tls_hostname | --hostname | The hostname which should be sent as SNI
+tls_common_name | --common-name | The command name of the certificate
+tls_file | --file | Path to the file
+tls_warn | --warn | Amount of days left until certificate expires. Default: 21
+tls_crit | --crit | Amount of days left until certificate expires. Default: 14
+tls_openssl | --openssl | Path to the openssl binary. Default: /usr/bin/openssl
+
+Hint: Not every parameter has to be set.
+
+
+
 # Examples
 
 Note: The CheckCommand is always the same.
