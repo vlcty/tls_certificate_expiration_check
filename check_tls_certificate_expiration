@@ -35,6 +35,7 @@ our $ARG_OPENSSL = '/usr/bin/openssl';
 
 # Argument for file check
 our $ARG_FILE = '';
+our $ARG_COMMON_NAME = '';
 
 main();
 
@@ -46,15 +47,45 @@ sub main {
 		$certificate, Crypt::OpenSSL::X509::FORMAT_PEM
 	);
 
-	my $daysLeft = calculate_days_left($x509->notAfter());
+	my $daysLeft = calculateDaysLeft($x509->notAfter());
+	my $commonName = extractCommonName($x509->subject());
 
+	decideExitCode($daysLeft, $commonName);
+}
+
+sub decideExitCode {
+	my ( $daysLeft, $commonName ) = @_;
+
+	if ( length($ARG_COMMON_NAME) != 0 ) {
+		# Common name check wanted
+		if ( $ARG_COMMON_NAME ne $commonName ) {
+			printf("CRITICAL - Common name does not match. Got: %s\n",
+				$commonName);
+			exit(2);
+		}
+	}
+
+	# Days left check
+	if ( $daysLeft <= $ARG_CRITICAL_DAYS ) {
+		printf("CRITICAL - %d days left\n", $daysLeft);
+		exit(2);
+	}
+	elsif ( $daysLeft <= $ARG_WARNING_DAYS ) {
+		printf("WARNING - %d days left\n", $daysLeft);
+		exit(1);
+	}
+	else {
+		printf("OK - %d days left\n", $daysLeft);
+		exit(0);
+	}
 }
 
 sub parseArguments {
 	GetOptions (
 		'address=s' => \$ARG_ADDRESS,
-		'port=s' => \$ARG_HOSTNAME,
+		'port=s' => \$ARG_PORT,
 		'hostname=s' => \$ARG_HOSTNAME,
+		'common-name=s' => \$ARG_COMMON_NAME,
 		'file=s' => \$ARG_FILE,
 		'warn=i' => \$ARG_WARNING_DAYS,
 		'crit=i' => \$ARG_CRITICAL_DAYS,
@@ -130,8 +161,7 @@ sub isInteger {
 }
 
 sub exitUnknown {
-	my $errorMessage = shift;
-	print("$errorMessage\n");
+	printf("UNKNOWN - %s\n", shift);
 	exit 3;
 }
 
@@ -153,11 +183,13 @@ sub retrieveCertificate {
 		my $command = sprintf(
 			"echo \"\" | %s s_client -connect %s:%d %s 2> /dev/null | %s x509 2> /dev/null",
 			$ARG_OPENSSL,
-			$ARG_HOSTNAME,
+			$ARG_ADDRESS,
 			$ARG_PORT,
 			$sniPart,
 			$ARG_OPENSSL
 			);
+
+		print($command . "\n");
 
 		$certificate = `$command`;
 	}
@@ -181,7 +213,7 @@ sub retrieveCertificate {
 	return $certificate;
 }
 
-sub calculate_days_left {
+sub calculateDaysLeft {
 	my $expireDate = shift;
 
 	my ($year, $month, $day) = Parse_Date($expireDate);
@@ -190,4 +222,15 @@ sub calculate_days_left {
 
 	return Delta_Days($nowYear, $nowMonth, $nowDay,
 		$year, $month, $day);
+}
+
+sub extractCommonName {
+	my $possibleCommonName = shift;
+
+	if ( $possibleCommonName =~ m/CN=(.*),/ ) {
+		return $1;
+	}
+	else {
+		exitUnknown("No common name given");
+	}
 }
