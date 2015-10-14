@@ -7,9 +7,13 @@ An expired certificate isn't good and should never happen. Well, it happened to 
 
 ## What it does
 
-The plugin uses OpenSSL's s_client to connect to a given hostname and port. Afterwards the expiration date is extracted and the delta time in days calculated.
+There are two modes:
 
-You can give custom parameters for warning- and critical-values. Defaul warning-value is 30 days and default critical-value is 10 days.
+1) Fetch a file via the network
+2) Read a local file
+
+If you give an address and a port option 1 is choosen.
+If you set a file option 2 is choosen.
 
 ## How to install
 ### Step 1: Get the script
@@ -18,21 +22,22 @@ Fetch the script and place it in your PluginDir-Folder. Usually it's unter `/usr
 
 ### Step 2: Install dependencies
 
-I assume you have `perl` and `openssl` already installed. The only additional dependency is the `Date::Calc` perl module. It was already installed on my Ubuntu 15.04 system but not ony my Debian 8 servers.
+The following applications and modules are needed:
 
-If you use `apt` you can simply install it via
+- perl of course
+- openssl
+- Perl module "Crypt::OpenSSL::X509"
+- Perl module "Date::Calc"
 
-```apt-get install libdate-calc-perl```
+If you are on a Debian/Ubuntu based machine you can install the needed perl modules via apt:
 
-Or you install it over CPAN. Your choice!
+```apt-get install libdate-calc-perl libcrypt-openssl-x509-perl```
+
+Another way is to fetch it over CPAN. Your choice!
 
 ### Step 3: Make it available for Icinga 2
 
-I don't have Nagios so I don't know how to configure it :-)
-
-I tried to developed the plugin according to the "Nagios Plugin Development Guidelines" so there shouldn't be any problem with implementing this check in Nagios. You just have to figure out how.
-
-To make it available to Icinga 2 you have to do the following steps.
+I don't have Nagios so I don't know how to configure it :-) I tried to developed the plugin according to the "Nagios Plugin Development Guidelines" so there shouldn't be any problem implementing this check in a nagios compatible environment.
 
 #### Step 3.1: Create a CheckCommand object
 
@@ -41,26 +46,23 @@ Navigate on your Icinga 2 server to your config folder (Normally `/etc/icinga2/c
 I placed the following piece of code in `commands.cfg`:
 
 ```
-object CheckCommand "tls_certificate_expiration_check" {
+object CheckCommand "tls_certificate_expiration" {
     import "plugin-check-command"
 
     command = [ PluginDir + "/check_tls_certificate_expiration" ]
-    
+
     arguments = {
-        "--hostname" = {
-            required = true
-            value = "$tls_hostname$"
-        }
-        "--servername" = {
-            required = true
-            value = "$tls_servername$"
-        }
+        "--address" = "$tls_address$"
         "--port" = "$tls_port$"
+        "--hostname" = "$tls_hostname$"
+        "--common-name" = "$tls_common_name$"
+        "--file" = "$tls_file"
         "--warn" = "$tls_warn$"
         "--crit" = "$tls_crit$"
+        "--openssl" = "$tls_openssl$"
     }
 
-    vars.tls_hostname = "$address$"
+    vars.tls_address = "$address$"
 }
 
 ```
@@ -79,20 +81,12 @@ object Service "tls_blog.veloc1ty.de" {
         display_name = "TLS expire blog.veloc1ty.de"
         check_interval = 1d
 
-        check_command = "tls_certificate_expiration_check"
+        check_command = "tls_certificate_expiration"
 
-        vars.tls_servername = "blog.veloc1ty.de"
+        vars.tls_hostname = "blog.veloc1ty.de"
 }
 
 ```
-
-Possible vars are:
-
-* tls_hostname = The hostname of the server (mandatory, default: hosts address)
-* tls_servername = The FQDN for the server name indication (SNI, mandatory)
-* tls_port = The port of the server. Default: 443
-* tls_warn = Warning limit in days before expiry date. Default: 30
-* tls_crit = Critical limit in days before expiry date. Default: 10
 
 Of course you can change check_interval to the value you desire. Since the plugin calculates in whole days one check every day is enough.
 
@@ -102,15 +96,66 @@ If you want to add a service group for this check you can simply add the followi
 
 ```
 object ServiceGroup "tls_certificate_expiration" {
-    display_name = "TLS certificate expiration checks"
+    display_name = "TLS certificate expiration"
 
-    assign where service.check_command == "tls_certificate_expiration_check"
+    assign where service.check_command == "tls_certificate_expiration"
 }
 ```
 
 If you want to add it to multiple hosts work with `apply`!
 
 That's it. Pretty simple. Reload or restart icinga2 and check the result in your browser.
+
+# Examples
+
+Note: The CheckCommand is always the same.
+The host "mineralwasser" is given.
+
+## Check a HTTPS Certificate via SNI
+
+```
+object Service "tls-blog-veloc1ty-de" {
+    import "generic-service"
+
+    check_command = "tls_certificate_expiration"
+    host_name = "mineralwasser"
+
+    vars.tls_hostname = "blog.veloc1ty.de"
+    vars.tls_common_name = "blog.veloc1ty.de"
+    // Note: address is automatically set to the host's address
+    // Note: port is default 443
+    // Note: If you skip tls_common_name common name checking is disabled
+}
+```
+
+## Check an IMAP certificate
+
+```
+object Service "tls-mail-veloc1ty-de" {
+    import "generic-service"
+
+    check_command = "tls_certificate_expiration"
+    host_name = "mineralwasser"
+
+    vars.tls_port = "993"
+    // Note: address is automatically set to the host's address
+    // Note: no SNI is needed, so we can skip "tls_hostname"
+}
+```
+
+## Check a local file
+
+```
+object Service "tls-veloc1ty-ca" {
+    import "generic-service"
+
+    check_command = "tls_certificate_expiration"
+    host_name = "mineralwasser"
+
+    vars.tls_file = "/path/to/veloc1tyCA.pem"
+    // Note: address is automatically set to the host's address
+}
+```
 
 # Special thanks
 
