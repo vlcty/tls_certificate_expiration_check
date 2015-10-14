@@ -111,6 +111,7 @@ That's it. Pretty simple. Reload or restart icinga2 and check the result in your
 The CheckCommand and the plugin accept various arguments:
 
 CheckCommand Variable | Plugin Argument | Description
+----------------------|-----------------|-------------
 tls_address | --address | The address of the server
 tls_port | --port | The port to connect to. Default: 443
 tls_hostname | --hostname | The hostname which should be sent as SNI
@@ -122,7 +123,13 @@ tls_openssl | --openssl | Path to the openssl binary. Default: /usr/bin/openssl
 
 Hint: Not every parameter has to be set.
 
+If you specify *tls_address* the plugin does a network fetch and ignores file settings.
 
+If you specify *tls_file* the plugin reads from file and ignores the network settings.
+
+*tls_warn*,*tls_crit*, *tls_common_name* and *tls_openssl* can always be set.
+
+Note: If you don't specify *tls_common_name* the common name check is skipped.
 
 # Examples
 
