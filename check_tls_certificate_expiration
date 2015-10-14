@@ -42,10 +42,6 @@ sub main {
 	parseArguments();
 	my $certificate = retrieveCertificate();
 
-	if ( $certificate !~ /BEGIN CERTIFICATE/ ) {
-		exitUnknown("Didn't receive a certificate");
-	}
-
 	my $x509 = Crypt::OpenSSL::X509->new_from_string(
 		$certificate, Crypt::OpenSSL::X509::FORMAT_PEM
 	);
@@ -176,6 +172,10 @@ sub retrieveCertificate {
 		}
 
 		close(CERT);
+	}
+
+	if ( $certificate !~ /BEGIN CERTIFICATE/ ) {
+		exitUnknown("Didn't receive a certificate");
 	}
 
 	return $certificate;
