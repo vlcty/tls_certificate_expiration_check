@@ -19,7 +19,8 @@
 use strict;
 use warnings;
 use Getopt::Long;
-use Date::Calc qw(Delta_Days Decode_Month Today);
+use Date::Calc qw(Delta_Days Parse_Date Today);
+use Date::Parse;
 use Crypt::OpenSSL::X509;
 
 # Basic Arguments
@@ -39,6 +40,18 @@ main();
 
 sub main {
 	parseArguments();
+	my $certificate = retrieveCertificate();
+
+	if ( $certificate !~ /BEGIN CERTIFICATE/ ) {
+		exitUnknown("Didn't receive a certificate");
+	}
+
+	my $x509 = Crypt::OpenSSL::X509->new_from_string(
+		$certificate, Crypt::OpenSSL::X509::FORMAT_PEM
+	);
+
+	my $daysLeft = calculate_days_left($x509->notAfter());
+
 }
 
 sub parseArguments {
@@ -142,7 +155,7 @@ sub retrieveCertificate {
 
 		# Build command
 		my $command = sprintf(
-			"echo \"\" | %s s_client -connect %s:%d %s | %S x509",
+			"echo \"\" | %s s_client -connect %s:%d %s 2> /dev/null | %s x509 2> /dev/null",
 			$ARG_OPENSSL,
 			$ARG_HOSTNAME,
 			$ARG_PORT,
@@ -150,8 +163,7 @@ sub retrieveCertificate {
 			$ARG_OPENSSL
 			);
 
-		my $output = `$command`;
-
+		$certificate = `$command`;
 	}
 	else {
 		# File mode
@@ -172,10 +184,10 @@ sub retrieveCertificate {
 sub calculate_days_left {
 	my $expireDate = shift;
 
-	my ($month, $day, $time, $year, $tz) = split(/\s+/, $expireDate);
+	my ($year, $month, $day) = Parse_Date($expireDate);
 
 	my ( $nowYear, $nowMonth, $nowDay) = Today();
 
 	return Delta_Days($nowYear, $nowMonth, $nowDay,
-		$year, Decode_Month($month), $day);
+		$year, $month, $day);
 }
