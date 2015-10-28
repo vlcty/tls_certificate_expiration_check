@@ -230,7 +230,7 @@ sub calculateDaysLeft {
 sub extractCommonName {
 	my $possibleCommonName = shift;
 
-	if ( $possibleCommonName =~ m/CN=(.*),/ ) {
+	if ( $possibleCommonName =~ m/CN=(.*)/ ) {
 		return $1;
 	}
 	else {
