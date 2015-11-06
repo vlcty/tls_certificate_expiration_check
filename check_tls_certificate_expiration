@@ -231,7 +231,11 @@ sub extractCommonName {
 	my $possibleCommonName = shift;
 
 	if ( $possibleCommonName =~ m/CN=(.*)/ ) {
-		return $1;
+		# Strip possible E-Mail address
+        my $cn = $1;
+        $cn =~ s/,.*//;
+
+        return $cn;
 	}
 	else {
 		exitUnknown("No common name given");
