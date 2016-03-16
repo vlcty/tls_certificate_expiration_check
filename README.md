@@ -56,7 +56,7 @@ object CheckCommand "tls_certificate_expiration" {
         "--port" = "$tls_port$"
         "--hostname" = "$tls_hostname$"
         "--common-name" = "$tls_common_name$"
-        "--file" = "$tls_file"
+        "--file" = "$tls_file$"
         "--warn" = "$tls_warn$"
         "--crit" = "$tls_crit$"
         "--openssl" = "$tls_openssl$"
