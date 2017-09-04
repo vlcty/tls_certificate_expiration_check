@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # check_tls_certificate_expiration - Check for nagios/icinga/icinga2 to check TLS Certificates
 # Copyright (C) 2015  Josef 'veloc1ty' Stautner (hello@veloc1ty.de)
@@ -31,6 +31,7 @@ our $ARG_ADDRESS = '';
 our $ARG_HOSTNAME = ''; # Only used for HTTP SNI
 our $ARG_PORT = 443;
 our $ARG_OPENSSL = '/usr/bin/openssl';
+our $ARG_STARTTLS = '';
 
 # Argument for file check
 our $ARG_FILE = '';
@@ -95,7 +96,8 @@ sub parseArguments {
 		'file=s' => \$ARG_FILE,
 		'warn=i' => \$ARG_WARNING_DAYS,
 		'crit=i' => \$ARG_CRITICAL_DAYS,
-		'openssl=s' => \$ARG_OPENSSL
+		'openssl=s' => \$ARG_OPENSSL,
+		'starttls=s' => \$ARG_STARTTLS
 	);
 
 	validateArguments();
@@ -185,12 +187,20 @@ sub retrieveCertificate {
 			$sniPart = sprintf("-servername %s", $ARG_HOSTNAME);
 		}
 
+		# Check if we have to set starttls protocol
+		my $starttlsPart = '';
+
+		if ( length($ARG_STARTTLS) != 0 ) {
+			$starttlsPart = sprintf("-starttls %s", $ARG_STARTTLS);
+		}
+
 		# Build command
 		my $command = sprintf(
-			"echo \"\" | %s s_client -connect %s:%d %s 2> /dev/null | %s x509 2> /dev/null",
+			"echo \"\" | %s s_client -connect %s:%d %s %s 2> /dev/null | %s x509 2> /dev/null",
 			$ARG_OPENSSL,
 			$ARG_ADDRESS,
 			$ARG_PORT,
+			$starttlsPart,
 			$sniPart,
 			$ARG_OPENSSL
 			);

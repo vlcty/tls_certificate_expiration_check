@@ -60,6 +60,7 @@ object CheckCommand "tls_certificate_expiration" {
         "--warn" = "$tls_warn$"
         "--crit" = "$tls_crit$"
         "--openssl" = "$tls_openssl$"
+	"--starttls" = "$tls_protocol$"
     }
 
     vars.tls_address = "$address$"
@@ -120,6 +121,7 @@ tls_file | --file | Path to the file
 tls_warn | --warn | Amount of days left until certificate expires. Default: 21
 tls_crit | --crit | Amount of days left until certificate expires. Default: 14
 tls_openssl | --openssl | Path to the openssl binary. Default: /usr/bin/openssl
+tls_protocol | --starttls | One in "smtp", "pop3", "imap", "ftp" or "xmpp"
 
 Hint: Not every parameter has to be set.
 
