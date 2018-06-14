@@ -18,7 +18,7 @@
 
 use strict;
 use warnings;
-use Getopt::Long;
+use Getopt::Long qw(:config auto_help);
 use Date::Calc qw(Delta_Days Parse_Date Today);
 use Crypt::OpenSSL::X509;
 
@@ -36,6 +36,12 @@ our $ARG_STARTTLS = '';
 # Argument for file check
 our $ARG_FILE = '';
 our $ARG_COMMON_NAME = '';
+
+=head1 NAME
+
+check_tls_certificate_expiration - check if a TLS certificate is about to expire
+
+=cut
 
 main();
 
@@ -87,7 +93,58 @@ sub decideExitCode {
 	}
 }
 
+=head1 SYNOPSIS
+
+check_tls_certificate_expiration --address ADDRESS|--file FILE [--port PORT] [--hostname SNI_HOSTNAME] [--common-name NAME] [--warn DAYS] [--crit DAYS] [--openssl PATH] [--starttls PROTOCOL]
+
+=head1 OPTIONS
+
+=over
+
+=item B<--address> I<address>
+
+Address (host name or IP address) to get the certificate to check from.
+Either this or B<--file> must be specified.
+
+=item B<--file> I<path>
+
+File containing a certificate to check the expiration of. Either this or
+B<--address> must be specified.
+
+=item B<--hostname> I<name>
+
+Host name to specify to the remote server via TLS SNI.
+
+=item B<common-name> I<name>
+
+Confirm the certificate has the expected common name. (Note this doesn't
+handle subjectAltNames and also does not do certificate verification.)
+
+=item B<warn> I<days>
+
+Exit with warning status if certificate expires in I<days> days or fewer.
+
+=item B<crit> I<days>
+
+Exit with critical status if certificate expires in I<days> days or fewer.
+
+=item B<starttls> I<protocol>
+
+Use I<protocol>'s version of STARTTLS to start the TLS connection. This
+must be a protocol supported by OpenSSL's s_client; see
+L<s_client(1ssl)>. As of 1.1.0h, supported protocol include C<smtp>,
+C<pop3>, C<imap>, C<ftp>, C<xmpp>, C<xmpp-server>, and C<irc>.
+
+=item B<openssl> I<path>
+
+Specify the full path to the OpenSSL command-line program. Default is F</usr/bin/openssl>
+
+=back
+
+=cut
+
 sub parseArguments {
+	my $want_help = 0;
 	GetOptions (
 		'address=s' => \$ARG_ADDRESS,
 		'port=s' => \$ARG_PORT,
@@ -251,3 +308,41 @@ sub extractCommonName {
 		exitUnknown("No common name given");
 	}
 }
+
+=head1 CAVEATS
+
+Certificates are not verified, e.g., a certificate signed by an unknown
+certificate authority will be accepted.
+
+=head1 BUGS
+
+There is no way currently to verify subjectAltNames contain the expected
+value(s).
+
+Bug tracker:
+L<https://github.com/vlcty/tls_certificate_expiration_check/issues>.
+
+=head1 AUTHORS
+
+Originally written by Josef 'veloc1ty' Stautner (L<hello@veloc1ty.de>) with
+improvements by Jonas Palm and Anthony DeRobertis (L<anthony@derobert.net>).
+
+Please report any bugs, suggestions, etc. via the issue tracker at
+L<https://github.com/vlcty/tls_certificate_expiration_check/issues>.
+
+=head1 LICENSE
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut
