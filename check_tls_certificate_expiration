@@ -21,6 +21,7 @@ use warnings;
 use Getopt::Long qw(:config auto_help);
 use Date::Calc qw(Delta_Days Parse_Date Today);
 use Crypt::OpenSSL::X509;
+use IPC::Run3 qw(run3);
 
 # Basic Arguments
 our $ARG_WARNING_DAYS = 21;
@@ -244,41 +245,24 @@ sub retrieveCertificate {
 	if ( length($ARG_FILE) == 0 ) {
 		# Network mode
 		# Fetch certificate and return it as a string
+		my @cmd
+			= ($ARG_OPENSSL, 's_client', '-connect', "$ARG_ADDRESS:$ARG_PORT");
 
-		# Check if we have to set SNI
-		my $sniPart = '';
+		push @cmd, (-servername => $ARG_HOSTNAME) if '' ne $ARG_HOSTNAME;
+		push @cmd, (-starttls   => $ARG_STARTTLS) if '' ne $ARG_STARTTLS;
+		push @cmd, (-xmpphost   => $ARG_XMPPHOST) if '' ne $ARG_XMPPHOST;
 
-		if ( length($ARG_HOSTNAME) != 0 ) {
-			$sniPart = sprintf("-servername %s", $ARG_HOSTNAME);
-		}
+		my $out;
+		run3 \@cmd, \undef, \$out, \undef;
 
-		# Check if we have to set starttls protocol
-		my $starttlsPart = '';
-
-		if ( length($ARG_STARTTLS) != 0 ) {
-			$starttlsPart = sprintf("-starttls %s", $ARG_STARTTLS);
-		}
-
-		# Check if we have an XMPP hostname
-		my $xmpphostPart = '';
-
-		if ( length($ARG_XMPPHOST) != 0 ) {
-			$xmpphostPart = sprintf("-xmpphost %s", $ARG_XMPPHOST);
-		}
-
-		# Build command
-		my $command = sprintf(
-			"echo \"\" | %s s_client -connect %s:%d %s %s %s 2> /dev/null | %s x509 2> /dev/null",
-			$ARG_OPENSSL,
-			$ARG_ADDRESS,
-			$ARG_PORT,
-			$starttlsPart,
-			$sniPart,
-			$xmpphostPart,
-			$ARG_OPENSSL
-			);
-
-		$certificate = `$command`;
+		# This seems superfluous; Crypt::OpenSSL::X509 will happily pull
+		# the cert out itself. But the original version pulled it out,
+		# so continuing to do so in case there was a reason.
+		$out =~ /(
+			^-{3,}BEGIN\ CERTIFICATE-{3,}\n
+			.+\n
+			-{3,}END\ CERTIFICATE-{3,}$)/msx;
+		$certificate = $1 // '';
 	}
 	else {
 		# File mode
