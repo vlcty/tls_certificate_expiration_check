@@ -28,10 +28,11 @@ The following applications and modules are needed:
 - openssl
 - Perl module "Crypt::OpenSSL::X509"
 - Perl module "Date::Calc"
+- Perl module "IPC::Run3"
 
 If you are on a Debian/Ubuntu based machine you can install the needed perl modules via apt:
 
-```apt-get install libdate-calc-perl libcrypt-openssl-x509-perl```
+```apt-get install libdate-calc-perl libcrypt-openssl-x509-perl libipc-run3-perl```
 
 Another way is to fetch it over CPAN. Your choice!
 
